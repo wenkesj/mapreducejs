@@ -1,0 +1,22 @@
+{
+  "author": "Sam Wenke <samwenke@gmail.com> (http://wenkesj.com/)",
+  "name": "network-collection",
+  "description": "Baseline collection of graphs and network data structures using **socket.io**.",
+  "version": "1.0.6",
+  "keywords": "Networks, Graphs, Nodes, Edges, Distributed, socket",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wenkesj/network-collection.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "socket.io": "^1.4.5",
+    "socket.io-client": "^1.4.5"
+  },
+  "dependencies": {
+    "asyncawait": "^1.0.3"
+  }
+}
