@@ -2,7 +2,7 @@
   "author": "Sam Wenke <samwenke@gmail.com> (http://wenkesj.com/)",
   "name": "mapreducejs",
   "description": "MapReduce using **socket.io**",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "keywords": "map, reduce, distributed, socket",
   "directories": {
     "lib": "lib",
