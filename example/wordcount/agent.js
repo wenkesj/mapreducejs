@@ -1,13 +1,13 @@
 'use strict';
 const client = require('socket.io-client');
 const config = require('./config.json');
-const Agent = require('../').Agent;
+const mr = require('../../');
 const port = config.port;
 const connections = config.connections;
 
 const handleConnect = function(agents, socket, id) {
   // Load the network with these agents.
-  agents[id] = new Agent();
+  agents[id] = new mr.Agent();
 
   // Connect the Agent to the Master.
   agents[id].connect(socket)

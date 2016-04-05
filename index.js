@@ -103,7 +103,7 @@ class Master {
       'disconnect': this._handleDisconnect.bind(this, socket),
     };
   }
-  dataset(dataSet) {
+  source(dataSet) {
     return new Dataset(this, dataSet);
   }
   connect(socket) {
