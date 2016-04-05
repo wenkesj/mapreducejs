@@ -1,15 +1,18 @@
 {
   "author": "Sam Wenke <samwenke@gmail.com> (http://wenkesj.com/)",
-  "name": "network-collection",
-  "description": "Baseline collection of graphs and network data structures using **socket.io**.",
-  "version": "1.0.6",
-  "keywords": "Networks, Graphs, Nodes, Edges, Distributed, socket",
+  "name": "mapreducejs",
+  "description": "MapReduce using **socket.io**",
+  "version": "1.0.0",
+  "keywords": "map, reduce, distributed, socket",
   "directories": {
-    "lib": "lib"
+    "lib": "lib",
+    "example": "example",
+    "agent": "agent",
+    "master": "master"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wenkesj/network-collection.git"
+    "url": "https://github.com/wenkesj/mapreducejs.git"
   },
   "license": "MIT",
   "devDependencies": {

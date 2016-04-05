@@ -4,8 +4,8 @@ const fs = require('fs');
 const config = require('./config.json');
 const port = config.port;
 const io = sio(port);
-const mr = require('../../');
-const master = new mr.Master(io);
+const Master = require('../../master');
+const master = new Master(io);
 
 const dictionary = fs.readFileSync('./data/huckleberryfin.txt', 'utf-8')
   .split(/\n+/)
