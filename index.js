@@ -1,6 +1,5 @@
 'use strict';
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
+const map = require('async/map');
 
 class Dataset {
   constructor(master, data) {
@@ -16,6 +15,17 @@ class Dataset {
     }
     return groups;
   }
+  flatten(arr) {
+    var ret = [];
+    for (var i = 0; i < arr.length; i++) {
+      if (Array.isArray(arr[i])) {
+        ret = ret.concat(this.flatten(arr[i]));
+      } else {
+        ret.push(arr[i]);
+      }
+    }
+    return ret;
+  }
   chunk(arr, chunkSize) {
     let groups = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
@@ -24,66 +34,37 @@ class Dataset {
     return groups;
   }
   map(mapFunction) {
-    let mapFinal = (data, mapFunction) => {
-      let agents = Object.keys(this.master.agents);
-      let mapData = this.chunk(data, Math.ceil(this.data.length / agents.length));
-      let results = async(function(agents, mapData, mapFunction) {
-        return await(Promise.all(
-          agents.map((key, index) => {
-            return new Promise((resolve, reject) => {
-              this.master.agents[key].emit('map', {
-                'map': 'map = ' + mapFunction,
-                'data': mapData[index] || null
-              });
-              this.master.agents[key].once(`map_response_${key.replace(/[\/\#]/g, '')}`, (res) => {
-                resolve(res);
-              });
-            })
-            .then((res) => res);
-          }))
-          .then((res) => res.filter((res) => !!res))
-        );
-      }.bind(this));
-      return new Dataset(this.master, results(agents, mapData, mapFunction));
-    };
-
-    if ('then' in this.data) {
-      return this.data.then((data) => {
-        return mapFinal(data, mapFunction);
-      });
-    }
-    return mapFinal(this.data, mapFunction);
+    let agents = Object.keys(this.master.agents);
+    let mapData = this.chunk(this.data, Math.ceil(this.data.length / agents.length));
+    return Promise.all(
+      agents.map((key, index) => {
+        return new Promise((resolve, reject) => {
+          this.master.agents[key].emit('map', {
+            'map': 'map = ' + mapFunction,
+            'data': mapData[index] || null,
+          }).once(`map_response_${key.replace(/[\/\#]/g, '')}`, (res) => {
+            resolve(res);
+          });
+        }).then((res) => res);
+      })
+    ).then((res) => Promise.resolve(new Dataset(this.master, this.flatten(res.filter((res) => !!res)))));
   }
   reduce(reduceFunction) {
-    let reduceFinal = (data, reduceFunction) => {
-      let agents = Object.keys(this.master.agents);
-      let reduceData = this.combine(data, 2);
-      let results = async(function(agents, reduceData, reduceFunction) {
-        return await(Promise.all(
-          agents.map((key, index) => {
-            return new Promise((resolve, reject) => {
-              this.master.agents[key].emit('reduce', {
-                'reduce': 'reduce = ' + reduceFunction,
-                'data': reduceData[index] || null
-              });
-              this.master.agents[key].once(`reduce_response_${key.replace(/[\/\#]/g, '')}`, (res) => {
-                resolve(res);
-              });
-            })
-            .then((res) => res);
-          }))
-          .then((res) => res.filter((res) => !!res))
-        );
-      }.bind(this));
-      return new Dataset(this.master, results(agents, reduceData, reduceFunction));
-    };
-
-    if ('then' in this.data) {
-      return this.data.then((data) => {
-        return reduceFinal(data, reduceFunction);
-      });
-    }
-    return reduceFinal(this.data, reduceFunction);
+    let agents = Object.keys(this.master.agents);
+    let reduceData = this.chunk(this.data, 2);
+    return Promise.all(
+      agents.map((key, index) => {
+        return new Promise((resolve, reject) => {
+          this.master.agents[key].emit('reduce', {
+            'reduce': 'reduce = ' + reduceFunction,
+            'data': reduceData[index] || null
+          });
+          this.master.agents[key].once(`reduce_response_${key.replace(/[\/\#]/g, '')}`, (res) => {
+            resolve(res);
+          });
+        }).then((res) => res);
+      })
+    ).then((res) => Promise.resolve(new Dataset(this.master, res.filter((res) => !!res))));
   }
 }
 

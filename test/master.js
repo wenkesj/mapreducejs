@@ -27,13 +27,11 @@ io.on('connection', function(socket) {
     master.dataset(dictionary)
     .map(function(line, index) {
       return line.split(/\s+/).length;
-    })
-    .reduce(function(prev, current) {
-      return prev + current;
-    })
-    .done(function(results) {
-      results.data.then((count) => {
-        console.log(count);
+    }).then((result) => {
+      result.reduce(function(prev, current) {
+        return prev + current;
+      }).then((result) => {
+        console.log(result.data);
       });
     });
   }

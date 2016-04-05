@@ -1,4 +1,4 @@
 {
   "port": 3000,
-  "connections": 4
+  "connections": 8
 }
