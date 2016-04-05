@@ -35,36 +35,50 @@ class Dataset {
   }
   map(mapFunction) {
     let agents = Object.keys(this.master.agents);
-    let mapData = this.chunk(this.data, Math.ceil(this.data.length / agents.length));
+    let numberOfAgents = agents.length;
     return Promise.all(
-      agents.map((key, index) => {
+      this.data.map((data, index) => {
         return new Promise((resolve, reject) => {
+          let key = agents[index % numberOfAgents];
           this.master.agents[key].emit('map', {
             'map': 'map = ' + mapFunction,
-            'data': mapData[index] || null,
-          }).once(`map_response_${key.replace(/[\/\#]/g, '')}`, (res) => {
-            resolve(res);
-          });
-        }).then((res) => res);
-      })
-    ).then((res) => Promise.resolve(new Dataset(this.master, this.flatten(res.filter((res) => !!res)))));
-  }
-  reduce(reduceFunction) {
-    let agents = Object.keys(this.master.agents);
-    let reduceData = this.chunk(this.data, 2);
-    return Promise.all(
-      agents.map((key, index) => {
-        return new Promise((resolve, reject) => {
-          this.master.agents[key].emit('reduce', {
-            'reduce': 'reduce = ' + reduceFunction,
-            'data': reduceData[index] || null
-          });
-          this.master.agents[key].once(`reduce_response_${key.replace(/[\/\#]/g, '')}`, (res) => {
+            'data': data || null,
+            'id': index,
+          }).once(`map_response_${key.replace(/[\/\#]/g, '')}${index}`, (res) => {
             resolve(res);
           });
         }).then((res) => res);
       })
     ).then((res) => Promise.resolve(new Dataset(this.master, res.filter((res) => !!res))));
+  }
+  reduce(reduceFunction) {
+    let reduce = () => {
+      let agents = Object.keys(this.master.agents);
+      let numberOfAgents = agents.length;
+      let reduceData = this.chunk(this.data, 2);
+      return Promise.all(
+        reduceData.map((data, index) => {
+          return new Promise((resolve, reject) => {
+            let key = agents[index % numberOfAgents];
+            this.master.agents[key].emit('reduce', {
+              'reduce': 'reduce = ' + reduceFunction,
+              'data': data || null,
+              id: index,
+            }).once(`reduce_response_${key.replace(/[\/\#]/g, '')}${index}`, (res) => {
+              resolve(res);
+            });
+          }).then((res) => res);
+        })
+      ).then((res) => {
+        return Promise.resolve(new Dataset(this.master, res.filter((res) => !!res)));
+      });
+    };
+    return reduce().then((res) => {
+      if (res.data.length > 1) {
+        return res.reduce(reduceFunction);
+      }
+      return Promise.resolve(res);
+    });
   }
 }
 
@@ -137,7 +151,7 @@ class Agent {
     }
     let map;
     eval(mapObj.map);
-    this.socket.emit(`map_response_${this.socket.id}`, mapObj.data.map(map));
+    this.socket.emit(`map_response_${this.socket.id}${mapObj.id}`, map(mapObj.data));
   }
   _handleReduce(reduceObj) {
     if (!reduceObj.data) {
@@ -146,7 +160,7 @@ class Agent {
     }
     let reduce;
     eval(reduceObj.reduce);
-    this.socket.emit(`reduce_response_${this.socket.id}`, reduceObj.data.reduce(reduce));
+    this.socket.emit(`reduce_response_${this.socket.id}${reduceObj.id}`, reduceObj.data.reduce(reduce));
   }
 }
 
